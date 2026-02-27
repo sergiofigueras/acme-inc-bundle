@@ -19,7 +19,7 @@ jobs:
         run: |
           set -euo pipefail
           ASSET_NAME="${BUNDLE_ASSET_NAME:-acme_inc_bundle.tar.gz}"
-          tar -czf "$ASSET_NAME" acme_inc_bundle/
+          tar -czf "$ASSET_NAME" /
           ls -lah "$ASSET_NAME"
 
       - name: Create GitHub Release
