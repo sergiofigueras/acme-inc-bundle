@@ -1,4 +1,4 @@
-name: Release and Deploy Bundle
+name: Release Bundle
 
 on:
   push:
