@@ -41,7 +41,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tar -czf "${{ steps.vars.outputs.asset }}" /
+          tar -czf "${{ steps.vars.outputs.asset }}" ./
           ls -lah "${{ steps.vars.outputs.asset }}"
 
       - name: Create GitHub Release
