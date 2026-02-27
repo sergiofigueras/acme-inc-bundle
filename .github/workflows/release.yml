@@ -3,7 +3,13 @@ name: Release and Deploy Bundle
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to release (example: v1.2.3)"
+        required: true
+        default: "v0.1.0"
 
 permissions:
   contents: write
@@ -11,19 +17,38 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build bundle asset
+      - name: Decide tag/version
+        id: vars
+        shell: bash
         run: |
           set -euo pipefail
-          ASSET_NAME="${BUNDLE_ASSET_NAME:-acme_inc_bundle.tar.gz}"
-          tar -czf "$ASSET_NAME" /
-          ls -lah "$ASSET_NAME"
+
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            TAG="${{ inputs.version }}"
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "asset=acme_inc_bundle-$TAG.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: Build bundle asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -czf "${{ steps.vars.outputs.asset }}" /
+          ls -lah "${{ steps.vars.outputs.asset }}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
           files: |
-            acme_inc_bundle.tar.gz
+            ${{ steps.vars.outputs.asset }}
