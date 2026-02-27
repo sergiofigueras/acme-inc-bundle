@@ -1,0 +1,29 @@
+name: Release and Deploy Bundle
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build bundle asset
+        run: |
+          set -euo pipefail
+          ASSET_NAME="${BUNDLE_ASSET_NAME:-acme_inc_bundle.tar.gz}"
+          tar -czf "$ASSET_NAME" acme_inc_bundle/
+          ls -lah "$ASSET_NAME"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            acme_inc_bundle.tar.gz
