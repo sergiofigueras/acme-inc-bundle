@@ -1,0 +1,49 @@
+name: Release and Deploy Bundle
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build bundle asset
+        run: |
+          set -euo pipefail
+          ASSET_NAME="${BUNDLE_ASSET_NAME:-bundle.tar.gz}"
+          tar -czf "$ASSET_NAME" acme_inc_bundle/
+          ls -lah "$ASSET_NAME"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            bundle.tar.gz
+
+  deploy:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger core deploy
+        env:
+          CORE_DEPLOY_URL: ${{ secrets.CORE_DEPLOY_URL }}
+          CORE_DEPLOY_TOKEN: ${{ secrets.CORE_DEPLOY_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+          ASSET_NAME: ${{ vars.BUNDLE_ASSET_NAME || 'bundle.tar.gz' }}
+          PLUGIN_MODULE: ${{ vars.BUNDLE_PLUGIN_MODULE || 'telefonica_cl_bundle' }}
+        run: |
+          set -euo pipefail
+          curl -sS -X POST "$CORE_DEPLOY_URL" \
+            -H 'content-type: application/json' \
+            -H "authorization: Bearer $CORE_DEPLOY_TOKEN" \
+            -d "{\"repo\":\"$REPO\",\"ref\":\"$TAG\",\"asset_name\":\"$ASSET_NAME\",\"plugin_module\":\"$PLUGIN_MODULE\",\"activate\":true}" \
+            | tee /dev/stderr
