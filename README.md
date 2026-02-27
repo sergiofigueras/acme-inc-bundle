@@ -1,1 +1,1 @@
-# acme-inc-bundle
+[![Release and Deploy Bundle](https://github.com/beneviah/telefonica-cl-bundle/actions/workflows/release-and-deploy.yml/badge.svg)](https://github.com/beneviah/telefonica-cl-bundle/actions/workflows/release-and-deploy.yml)
